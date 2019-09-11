@@ -46,6 +46,7 @@ import com.ibm.ws.common.internal.encoder.Base64Coder;
 import com.ibm.ws.security.oauth20.api.OAuth20Provider;
 import com.ibm.ws.security.oauth20.api.OidcOAuth20Client;
 import com.ibm.ws.security.oauth20.api.OidcOAuth20ClientProvider;
+import com.ibm.ws.security.oauth20.error.impl.BrowserAndServerLogMessage;
 import com.ibm.ws.security.oauth20.plugins.OidcBaseClient;
 import com.ibm.ws.security.oauth20.plugins.OidcBaseClientSerializer;
 import com.ibm.ws.security.oauth20.plugins.OidcBaseClientValidator;
@@ -249,14 +250,11 @@ public class RegistrationEndpointServices extends AbstractOidcEndpointServices {
         OidcBaseClient newClient = getOidcBaseClientFromRequestBody(request);
 
         if (newClient == null) {
-            String browserErrorMsg = Tr.formatMessage(tc, locales, "OAUTH_REGISTRATION_REQUEST_MISSING_CLIENT");
-            String serverErrorMsg = TraceNLS.getFormattedMessage(RegistrationEndpointServices.class,
-                    MESSAGE_BUNDLE,
-                    "OAUTH_REGISTRATION_REQUEST_MISSING_CLIENT",
-                    null,
-                    "CWWKS1463E: The OpenID Connect registration request does not contain a client. Ensure that the request body is not empty and contains a client encoded in JSON format.");
-            Tr.error(tc, serverErrorMsg);
-            throw new OidcServerException(browserErrorMsg, OIDCConstants.ERROR_INVALID_REQUEST, HttpServletResponse.SC_BAD_REQUEST);
+
+            BrowserAndServerLogMessage errorMsg = new BrowserAndServerLogMessage(tc, locales, "OAUTH_REGISTRATION_REQUEST_MISSING_CLIENT");
+            Tr.error(tc, errorMsg.getServerErrorMessage());
+            throw new OidcServerException(errorMsg.getBrowserErrorMessage(), OIDCConstants.ERROR_INVALID_REQUEST, HttpServletResponse.SC_BAD_REQUEST);
+
         }
 
         // Validate client
@@ -664,14 +662,11 @@ public class RegistrationEndpointServices extends AbstractOidcEndpointServices {
     private OidcOAuth20Client validateClientIdExists(String clientId, OidcOAuth20ClientProvider clientProvider) throws OidcServerException {
         OidcOAuth20Client client = clientProvider.get(clientId);
         if (client == null) {
-            String browserErrorMsg = Tr.formatMessage(tc, locales, "OAUTH_CLIENT_REGISTRATION_CLIENTID_NOT_FOUND", new Object[] { clientId });
-            String serverErrorMsg = TraceNLS.getFormattedMessage(RegistrationEndpointServices.class,
-                    MESSAGE_BUNDLE,
-                    "OAUTH_CLIENT_REGISTRATION_CLIENTID_NOT_FOUND",
-                    new Object[] { clientId },
-                    "CWWKS1424E: The client id {0} was not found.");
-            Tr.error(tc, serverErrorMsg);
-            throw new OidcServerException(browserErrorMsg, OIDCConstants.ERROR_INVALID_CLIENT, HttpServletResponse.SC_NOT_FOUND);
+
+            BrowserAndServerLogMessage errorMsg = new BrowserAndServerLogMessage(tc, locales, "OAUTH_CLIENT_REGISTRATION_CLIENTID_NOT_FOUND", new Object[] { clientId });
+            Tr.error(tc, errorMsg.getServerErrorMessage());
+            throw new OidcServerException(errorMsg.getBrowserErrorMessage(), OIDCConstants.ERROR_INVALID_CLIENT, HttpServletResponse.SC_NOT_FOUND);
+
         }
 
         return client;
@@ -680,14 +675,11 @@ public class RegistrationEndpointServices extends AbstractOidcEndpointServices {
     private String validateRequestContainsClientId(HttpServletRequest request) throws OidcServerException {
         String clientId = extractClientId(request.getPathInfo());
         if (OidcOAuth20Util.isNullEmpty(clientId)) {
-            String browserErrorMsg = Tr.formatMessage(tc, locales, "OAUTH_CLIENT_REGISTRATION_MISSING_CLIENTID", new Object[] { request.getMethod(), OAuth20Constants.CLIENT_ID });
-            String serverErrorMsg = TraceNLS.getFormattedMessage(RegistrationEndpointServices.class,
-                    MESSAGE_BUNDLE,
-                    "OAUTH_CLIENT_REGISTRATION_MISSING_CLIENTID",
-                    new Object[] { request.getMethod(), OAuth20Constants.CLIENT_ID },
-                    "CWWKS1426E: The {0} operation failed as the request did not contain the {1} parameter.");
-            Tr.error(tc, serverErrorMsg);
-            throw new OidcServerException(browserErrorMsg, OIDCConstants.ERROR_INVALID_REQUEST, HttpServletResponse.SC_BAD_REQUEST);
+
+            BrowserAndServerLogMessage errorMsg = new BrowserAndServerLogMessage(tc, locales, "OAUTH_CLIENT_REGISTRATION_MISSING_CLIENTID", new Object[] { clientId });
+            Tr.error(tc, errorMsg.getServerErrorMessage());
+            throw new OidcServerException(errorMsg.getBrowserErrorMessage(), OIDCConstants.ERROR_INVALID_REQUEST, HttpServletResponse.SC_BAD_REQUEST);
+
         }
 
         return clientId;
