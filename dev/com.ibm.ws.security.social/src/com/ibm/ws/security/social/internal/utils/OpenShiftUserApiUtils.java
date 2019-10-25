@@ -14,7 +14,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
@@ -22,8 +25,12 @@ import javax.json.JsonObjectBuilder;
 import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jose4j.lang.JoseException;
+
+import com.ibm.ejs.ras.Tr;
 import com.ibm.websphere.ras.annotation.Sensitive;
 import com.ibm.ws.security.common.http.HttpUtils;
+import com.ibm.ws.security.common.jwk.utils.JsonUtils;
 import com.ibm.ws.security.social.internal.OpenShiftLoginConfigImpl;
 
 public class OpenShiftUserApiUtils {
@@ -35,8 +42,7 @@ public class OpenShiftUserApiUtils {
     public OpenShiftUserApiUtils(OpenShiftLoginConfigImpl config) {
         this.config = config;
     }
-
-    public String getUserApiResponse(@Sensitive String accessToken, SSLSocketFactory sslSocketFactory) {
+    public String getUserApiResponse(@Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws JoseException, IOException {
         String response = null;
         try {
             HttpURLConnection connection = httpUtils.createConnection(HttpUtils.RequestMethod.POST, config.getUserApi(), sslSocketFactory);
@@ -48,25 +54,31 @@ public class OpenShiftUserApiUtils {
 
             String bodyString = createUserApiRequestBody(accessToken);
             System.out.println("AYOHO Writing body [" + bodyString + "]");
-            streamWriter.write(bodyString);
             // TODO
+            streamWriter.write(bodyString);
             streamWriter.close();
             outputStream.close();
             connection.connect();
-
+           
             int responseCode = connection.getResponseCode();
             response = httpUtils.readConnectionResponse(connection);
-            System.out.println("AYOHO Response [" + responseCode + "]: [" + response + "]");
+            
+            response = modifyExistingResponseToJSON(response);
+           
             if (responseCode != HttpServletResponse.SC_CREATED) {
                 // TODO - error condition
             }
-            response = response.replaceFirst("^\\{", "{\"username\":\"ayoho-edited-username\",");
-            System.out.println("AYOHO Edited response: [" + response + "]");
+
         } catch (IOException e) {
-            // TODO
-            e.printStackTrace();
+            // TODO- log error
+            throw(e);
         }
+          catch (JoseException jose) {
+        	  //TODO- log error
+        	  throw(jose);
+          }
         return response;
+       // return response;
     }
 
     @Sensitive
@@ -84,6 +96,30 @@ public class OpenShiftUserApiUtils {
         bodyBuilder.add("apiVersion", "authentication.k8s.io/v1");
         bodyBuilder.add("spec", Json.createObjectBuilder().add("token", accessToken));
         return bodyBuilder.build().toString();
+    }
+    private String modifyExistingResponseToJSON(String response) throws JoseException{
+        String jsonFormatResponse = JsonUtils.toJson(response);
+        Map<?, ?> firstMap = JsonUtils.claimsFromJsonObject(jsonFormatResponse);
+        Map<?, ?> statusInnerMap = (LinkedHashMap<?, ?>)firstMap.get("status");
+        Map<?, ?> userInnerMap = (LinkedHashMap<?, ?>)statusInnerMap.get("user");
+       
+        List<?> groupList = (ArrayList<?>) userInnerMap.get("groups");
+        StringBuilder correct = new StringBuilder("{\"username\":\"" + userInnerMap.get("username")+ "\",");
+        StringBuilder buildArray = new StringBuilder("\"groups\":[");
+        for(int i=0;i<groupList.size();i++) {
+        	
+        	if(i==groupList.size()-1) {
+        		buildArray.append("\"" + groupList.get(i)+ "\""+ "]}");
+        	}
+        	else {
+        		buildArray.append("\""  + groupList.get(i)+ "\""+ ",");
+        	}
+        }
+        String current = correct.append(buildArray).toString();
+       
+        return current;
+
+
     }
 
 }
