@@ -44,6 +44,7 @@ public class TAIUserApiUtils {
         String userinfoApi = userApiConfig.getApi();
         try {
             if (clientConfig instanceof OpenShiftLoginConfigImpl) {
+                //return convertLinkedinToJson(getUserApiResponseFromOpenShift((OpenShiftLoginConfigImpl) clientConfig, accessToken, sslSocketFactory), clientConfig.getUserNameAttribute());
                 return getUserApiResponseFromOpenShift((OpenShiftLoginConfigImpl) clientConfig, accessToken, sslSocketFactory);
             }
             String userApiResp = clientUtil.getUserApiResponse(userinfoApi,
@@ -69,7 +70,7 @@ public class TAIUserApiUtils {
         }
     }
 
-    private String getUserApiResponseFromOpenShift(OpenShiftLoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws JoseException, IOException {
+    private String getUserApiResponseFromOpenShift(OpenShiftLoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws IOException, JoseException{
         OpenShiftUserApiUtils openShiftUtils = new OpenShiftUserApiUtils(config);
         return openShiftUtils.getUserApiResponse(accessToken, sslSocketFactory);
     }
