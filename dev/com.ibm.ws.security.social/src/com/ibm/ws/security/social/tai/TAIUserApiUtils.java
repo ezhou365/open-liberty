@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import org.jose4j.json.internal.json_simple.parser.ParseException;
 import org.jose4j.lang.JoseException;
 
 import com.ibm.websphere.ras.Tr;
@@ -70,7 +71,8 @@ public class TAIUserApiUtils {
         }
     }
 
-    private String getUserApiResponseFromOpenShift(OpenShiftLoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws IOException, JoseException{
+
+    private String getUserApiResponseFromOpenShift(OpenShiftLoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws JoseException, IOException, SocialLoginException, ParseException {
         OpenShiftUserApiUtils openShiftUtils = new OpenShiftUserApiUtils(config);
         return openShiftUtils.getUserApiResponse(accessToken, sslSocketFactory);
     }
