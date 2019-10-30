@@ -26,7 +26,7 @@ import com.ibm.ws.security.social.TraceConstants;
 import com.ibm.ws.security.social.UserApiConfig;
 import com.ibm.ws.security.social.error.SocialLoginException;
 import com.ibm.ws.security.social.internal.LinkedinLoginConfigImpl;
-import com.ibm.ws.security.social.internal.OpenShiftLoginConfigImpl;
+import com.ibm.ws.security.social.internal.Oauth2LoginConfigImpl;
 import com.ibm.ws.security.social.internal.utils.OAuthClientUtil;
 import com.ibm.ws.security.social.internal.utils.OpenShiftUserApiUtils;
 
@@ -44,9 +44,8 @@ public class TAIUserApiUtils {
         UserApiConfig userApiConfig = userinfoCfg[0];
         String userinfoApi = userApiConfig.getApi();
         try {
-            if (clientConfig instanceof OpenShiftLoginConfigImpl) {
-                //return convertLinkedinToJson(getUserApiResponseFromOpenShift((OpenShiftLoginConfigImpl) clientConfig, accessToken, sslSocketFactory), clientConfig.getUserNameAttribute());
-                return getUserApiResponseFromOpenShift((OpenShiftLoginConfigImpl) clientConfig, accessToken, sslSocketFactory);
+            if (isOpenShiftConfig(clientConfig)) {
+                return getUserApiResponseFromOpenShift((Oauth2LoginConfigImpl) clientConfig, accessToken, sslSocketFactory);
             }
             String userApiResp = clientUtil.getUserApiResponse(userinfoApi,
                     accessToken,
@@ -71,8 +70,16 @@ public class TAIUserApiUtils {
         }
     }
 
+    private boolean isOpenShiftConfig(SocialLoginConfig clientConfig) {
+        boolean isOpenShiftConfig = false;
+        if (clientConfig instanceof Oauth2LoginConfigImpl) {
+            Oauth2LoginConfigImpl config = (Oauth2LoginConfigImpl) clientConfig;
+            return (config.getK8sTokenReviewEndpoint() != null);
+        }
+        return isOpenShiftConfig;
+    }
 
-    private String getUserApiResponseFromOpenShift(OpenShiftLoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws JoseException, IOException, SocialLoginException, ParseException {
+    private String getUserApiResponseFromOpenShift(Oauth2LoginConfigImpl config, @Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws IOException, SocialLoginException, ParseException, JoseException {
         OpenShiftUserApiUtils openShiftUtils = new OpenShiftUserApiUtils(config);
         return openShiftUtils.getUserApiResponse(accessToken, sslSocketFactory);
     }
