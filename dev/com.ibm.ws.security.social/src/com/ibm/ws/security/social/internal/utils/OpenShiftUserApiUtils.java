@@ -13,17 +13,18 @@ package com.ibm.ws.security.social.internal.utils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+import javax.json.stream.JsonParsingException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,12 +37,10 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Sensitive;
 import com.ibm.ws.security.common.http.HttpUtils;
-import com.ibm.ws.security.common.jwk.utils.JsonUtils;
 
 import com.ibm.ws.security.social.error.SocialLoginException;
 
 import com.ibm.ws.security.social.TraceConstants;
-import com.ibm.ws.security.social.error.SocialLoginException;
 import com.ibm.ws.security.social.internal.Oauth2LoginConfigImpl;
 
 
@@ -56,21 +55,16 @@ public class OpenShiftUserApiUtils {
     public OpenShiftUserApiUtils(Oauth2LoginConfigImpl config) {
         this.config = config;
     }
-    
-    public String getUserApiResponse(@Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws JoseException, IOException, SocialLoginException, ParseException{
 
+    public String getUserApiResponse(@Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws SocialLoginException {
         String response = null;
         try {
             HttpURLConnection connection = sendUserApiRequest(accessToken, sslSocketFactory);
             response = readUserApiResponse(connection);
-        } catch (ParseException e) {
-        	//do something
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new SocialLoginException("OPENSHIFT_ERROR_GETTING_USER_INFO", e, new Object[] { e });
-        } 
+        }
         return response;
-       // return response;
     }
 
     HttpURLConnection sendUserApiRequest(@Sensitive String accessToken, SSLSocketFactory sslSocketFactory) throws IOException, SocialLoginException {
@@ -109,6 +103,15 @@ public class OpenShiftUserApiUtils {
         return bodyBuilder.build().toString();
     }
 
+    String readUserApiResponse(HttpURLConnection connection) throws IOException, SocialLoginException, JoseException, ParseException {
+        int responseCode = connection.getResponseCode();
+        String response = httpUtils.readConnectionResponse(connection);
+        if (responseCode != HttpServletResponse.SC_CREATED) {
+            throw new SocialLoginException("OPENSHIFT_USER_API_BAD_STATUS", null, new Object[] { responseCode, response });
+        }
+        return modifyExistingResponseToJSON(response);
+    }
+
     String modifyExistingResponseToJSON(String response) throws JoseException, SocialLoginException, ParseException{
     	
     	if(response==null) {
@@ -117,57 +120,49 @@ public class OpenShiftUserApiUtils {
     	if(response.isEmpty()) {
     		throw new SocialLoginException("The response received from the user response api is empty",null,null);
     	}
-        //String jsonFormatResponse = JsonUtils.toJson(response);
-        Map<?, ?> firstMap = JsonUtils.claimsFromJsonObject(response);
-        
-        Map<?, ?> statusInnerMap = (LinkedHashMap<?, ?>)firstMap.get("status");
-        
-        if(statusInnerMap==null) {
-        	throw new SocialLoginException("Expected to find a key [0] in the map but did not find it",null,null);
-        }
-        Map<?, ?> userInnerMap = (LinkedHashMap<?, ?>)statusInnerMap.get("user");
-        
-        if(userInnerMap==null) {
+    	JsonObject jsonResponse;
+    	try {
+    		jsonResponse = Json.createReader(new StringReader(response)).readObject();
+    	}
+    	catch(JsonParsingException e) {
+    		throw new SocialLoginException("The response was not a json object. Response was: " + response,e,null);
+    	}
+    	
+    	
+    	JsonObject statusInnerMap,userInnerMap;
+    	JsonObjectBuilder modifiedResponse = Json.createObjectBuilder();
+    	if(jsonResponse.containsKey("status")) {
+    	//System.out.println(jsonResponse.get("status"));
+            JsonValue statusValue = jsonResponse.get("status");
+            if (ValueType.STRING == statusValue.getValueType()) {
+        		if(jsonResponse.getString("status").equals("Failure")) {
+        	        
+        			throw new SocialLoginException(jsonResponse.getString("message"),null,null);
+        		
+        		}
+            }
+    		statusInnerMap = jsonResponse.getJsonObject("status");
+    		
+
+    				
+    	}
+    	else {
+    		throw new SocialLoginException("Expected to find a key status in the map but did not find it",null,null);
+    	}
+    	if(statusInnerMap.containsKey("user")) {
+    		userInnerMap = statusInnerMap.getJsonObject("user");
+    		modifiedResponse.add("username", userInnerMap.getString(config.getUserNameAttribute()));
+    	}
+    	else {
         	throw new SocialLoginException("Expected to find a key [0] in the map but did not find it",null,null); 
-        }
-        List<?> groupList;
-        if(userInnerMap.get("groups") instanceof List  ) {
-        	groupList = (ArrayList<?>) userInnerMap.get("groups");
-        }
-
-        else {
-        	throw new SocialLoginException("The value associated with groups should be a list but it a [1]",null,null); 
-        }
-        if(userInnerMap.get("username")==null) {
-        	throw new SocialLoginException("The value associated with username is null",null,null);
-        }
-        if(((String)userInnerMap.get("username") +"").isEmpty()) {
-        	throw new SocialLoginException("The value associated with username is empty",null,null);
-        }
-        
-        JsonObjectBuilder modifiedResponse = Json.createObjectBuilder();
-        String current = (String)userInnerMap.get("username") ;
-      
-        modifiedResponse.add("username", current);
-
-        JsonArrayBuilder groups = Json.createArrayBuilder();
-        for (int i = 0; i < groupList.size(); i++) {
-            groups.add((String) groupList.get(i));
-        }
-        modifiedResponse.add("groups", groups.build());
-       
+    	}
+    	if(userInnerMap.containsKey("groups")) {
+             modifiedResponse.add("groups", userInnerMap.getJsonArray("groups")); 
+        	
+    	}
+     
         return modifiedResponse.build().toString();
-    }
 
-
-
-    String readUserApiResponse(HttpURLConnection connection) throws IOException, SocialLoginException, JoseException, ParseException {
-        int responseCode = connection.getResponseCode();
-        String response = httpUtils.readConnectionResponse(connection);
-        if (responseCode != HttpServletResponse.SC_CREATED) {
-            throw new SocialLoginException("OPENSHIFT_USER_API_BAD_STATUS", null, new Object[] { responseCode, response });
-        }
-        return modifyExistingResponseToJSON(response);
     }
 
 

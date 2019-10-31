@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.jmock.Expectations;
-import org.jose4j.lang.JoseException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,11 +28,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.ws.security.social.error.SocialLoginException;
-import com.ibm.ws.security.social.internal.OidcLoginConfigImpl;
 
 import com.ibm.ws.security.common.http.HttpUtils;
 import com.ibm.ws.security.common.http.HttpUtils.RequestMethod;
-import com.ibm.ws.security.social.error.SocialLoginException;
 import com.ibm.ws.security.social.internal.Oauth2LoginConfigImpl;
 
 import com.ibm.ws.security.social.test.CommonTestClass;
@@ -42,10 +39,12 @@ import test.common.SharedOutputManager;
 
 public class OpenShiftUserApiUtilsTest extends CommonTestClass {
 
-
+        
+    private final Oauth2LoginConfigImpl config = mockery.mock(Oauth2LoginConfigImpl.class);
+    private final OpenShiftUserApiUtils openShiftUserApiUtils = new OpenShiftUserApiUtils(config);
     private static SharedOutputManager outputMgr = SharedOutputManager.getInstance().trace("com.ibm.ws.security.social.*=all");
 
-    private final Oauth2LoginConfigImpl config = mockery.mock(Oauth2LoginConfigImpl.class);
+   // private final Oauth2LoginConfigImpl config = mockery.mock(Oauth2LoginConfigImpl.class);
     private final HttpUtils httpUtils = mockery.mock(HttpUtils.class);
     private final SSLSocketFactory sslSocketFactory = mockery.mock(SSLSocketFactory.class);
     private final HttpURLConnection httpUrlConnection = mockery.mock(HttpURLConnection.class);
@@ -85,19 +84,17 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
 
     @Test
     public void correctJSONTest() {
-    	String correctString = "{\"kind\":\"TokenReview\",\"apiVersion\":\"authentication.k8s.io/v1\",\"metadata\":{\"creationTimestamp\":null},\"spec\":{\"token\":\"OR4SdSuy-8NRK8NEiYXxxDu01DZcT6jPj5RJ32CDA_c\"},\"status\":{\"authenticated\":true,\"user\":{\"username\":\"admin\",\"uid\":\"ef111c43-d33a-11e9-b239-0016ac102af6\",\"groups\":[\"arunagroup\",\"system:authenticated:oauth\",\"system:authenticated\"],\"extra\":{\"scopes.authorization.openshift.io\":[\"user:full\"]}}}}";
+    	final String correctString = "{\"kind\":\"TokenReview\",\"apiVersion\":\"authentication.k8s.io/v1\",\"metadata\":{\"creationTimestamp\":null},\"spec\":{\"token\":\"OR4SdSuy-8NRK8NEiYXxxDu01DZcT6jPj5RJ32CDA_c\"},\"status\":{\"authenticated\":true,\"user\":{\"username\":\"admin\",\"uid\":\"ef111c43-d33a-11e9-b239-0016ac102af6\",\"groups\":[\"arunagroup\",\"system:authenticated:oauth\",\"system:authenticated\"],\"extra\":{\"scopes.authorization.openshift.io\":[\"user:full\"]}}}}";
+    	String returnedString= "";
     	try {
-//           mockery.checking(new Expectations() {
-//                {
-//                    allowing(openShiftUserApiUtils).modifyExistingResponseToJSON();
-//                    will(returnValue(httpClient));
-//                    one(httpClient).execute(httpUriRequest);
-//                    will(throwException(new IOException(defaultExceptionMsg)));
-//                }
-//            });
-			String returnedString = userApiUtils.modifyExistingResponseToJSON(correctString);
-			System.out.println(returnedString);
-			assertEquals(returnedString,"{\"username\":\"admin\",\"groups\":[\"arunagroup\",\"system:authenticated:oauth\",\"system:authenticated\"]}");
+           mockery.checking(new Expectations() {
+                {
+                    allowing(config).getUserNameAttribute();
+                    will(returnValue("username"));			
+                }
+            });
+           returnedString = userApiUtils.modifyExistingResponseToJSON(correctString);
+           assertEquals(returnedString,"{\"username\":\"admin\",\"groups\":[\"arunagroup\",\"system:authenticated:oauth\",\"system:authenticated\"]}");
 		} catch (Throwable t) {
 			outputMgr.failWithThrowable(testName.getMethodName(), t);
 		}
@@ -135,6 +132,40 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     		outputMgr.failWithThrowable(testName.getMethodName(), t);
     	}
     }
+    
+    
+    @Test
+    public void responseIsNotJSONObject() {
+    	try {
+    	openShiftUserApiUtils.modifyExistingResponseToJSON("vlah");
+		fail();	
+		} 
+    	catch (SocialLoginException e) {
+    		//nls 
+			verifyException(e,"com.ibm.ws.security.social.error.SocialLoginException: The response was not a json object. Response was: vlah" );
+			
+		}
+    	catch( Throwable t) {
+    		outputMgr.failWithThrowable(testName.getMethodName(), t);
+    	}
+    }
+    
+    @Test
+    public void groupsIsNotJsonArray() {
+    	try {
+    	openShiftUserApiUtils.modifyExistingResponseToJSON("{\"status\":{\"authenticated\":true,\"user\":{\"username\":\"admin\",\"uid\":\"ef111c43-d33a-11e9-b239-0016ac102af6\",\"groups\":\"yes\",\"extra\":{\"scopes.authorization.openshift.io\":[\"user:full\"]}}}}");
+		fail();	
+		} 
+    	catch (SocialLoginException e) {
+    		//nls 
+			verifyException(e,"The response received from the user response api is empty" );
+			
+		}
+    	catch( Throwable t) {
+    		outputMgr.failWithThrowable(testName.getMethodName(), t);
+    	}
+    }
+    
 
 
 
