@@ -82,7 +82,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
         outputMgr.restoreStreams();
     }
 
-    @Test
+   @Test
     public void correctJSONTest() {
     	final String correctString = "{\"kind\":\"TokenReview\",\"apiVersion\":\"authentication.k8s.io/v1\",\"metadata\":{\"creationTimestamp\":null},\"spec\":{\"token\":\"OR4SdSuy-8NRK8NEiYXxxDu01DZcT6jPj5RJ32CDA_c\"},\"status\":{\"authenticated\":true,\"user\":{\"username\":\"admin\",\"uid\":\"ef111c43-d33a-11e9-b239-0016ac102af6\",\"groups\":[\"arunagroup\",\"system:authenticated:oauth\",\"system:authenticated\"],\"extra\":{\"scopes.authorization.openshift.io\":[\"user:full\"]}}}}";
     	String returnedString= "";
@@ -117,7 +117,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     	}
     }
     
-    @Test
+   @Test
     public void emptyJSONTest() {
     	try {
     	userApiUtils.modifyExistingResponseToJSON("");
@@ -134,7 +134,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     }
     
     
-    @Test
+   @Test
     public void responseIsNotJSONObject() {
     	try {
     	openShiftUserApiUtils.modifyExistingResponseToJSON("vlah");
@@ -150,15 +150,21 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     	}
     }
     
-    @Test
+   @Test
     public void groupsIsNotJsonArray() {
     	try {
+            mockery.checking(new Expectations() {
+                {
+                    allowing(config).getUserNameAttribute();
+                    will(returnValue("username"));			
+                }
+            });
     	openShiftUserApiUtils.modifyExistingResponseToJSON("{\"status\":{\"authenticated\":true,\"user\":{\"username\":\"admin\",\"uid\":\"ef111c43-d33a-11e9-b239-0016ac102af6\",\"groups\":\"yes\",\"extra\":{\"scopes.authorization.openshift.io\":[\"user:full\"]}}}}");
 		fail();	
 		} 
     	catch (SocialLoginException e) {
     		//nls 
-			verifyException(e,"The response received from the user response api is empty" );
+			verifyException(e,"Groups is not jsonarray" );
 			
 		}
     	catch( Throwable t) {
@@ -300,7 +306,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
         }
     }
 
-    @Test
+   @Test
     public void test_createUserApiRequestBody_nonEmptyAccessToken() {
         final String accessToken = "this.is.an.access.token";
         try {

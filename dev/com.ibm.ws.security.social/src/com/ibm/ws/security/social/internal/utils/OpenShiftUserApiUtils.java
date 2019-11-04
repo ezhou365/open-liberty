@@ -157,7 +157,11 @@ public class OpenShiftUserApiUtils {
         	throw new SocialLoginException("Expected to find a key [0] in the map but did not find it",null,null); 
     	}
     	if(userInnerMap.containsKey("groups")) {
-             modifiedResponse.add("groups", userInnerMap.getJsonArray("groups")); 
+    		JsonValue groupsValue = userInnerMap.get("groups");
+    		if(groupsValue.getValueType() != ValueType.ARRAY) {
+    			throw new SocialLoginException("Groups is not jsonarray",null,null); 
+    		}
+    		 modifiedResponse.add("groups", userInnerMap.getJsonArray("groups")); 
         	
     	}
      
