@@ -109,7 +109,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     	catch (SocialLoginException e) {
     		//nls 
     		
-			verifyException(e,"The response received from the user response api is null" );
+			verifyException(e,"OPENSHIFT_USER_API_BAD_RESPONSE" );
 			
 		}
     	catch( Throwable t) {
@@ -125,7 +125,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
 		} 
     	catch (SocialLoginException e) {
     		//nls 
-			verifyException(e,"The response received from the user response api is empty" );
+			verifyException(e,"OPENSHIFT_USER_API_BAD_RESPONSE" );
 			
 		}
     	catch( Throwable t) {
@@ -133,7 +133,60 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
     	}
     }
     
-    
+   @Test
+   public void userKeyDoesNotExist() {
+	   	try {
+	   	openShiftUserApiUtils.modifyExistingResponseToJSON("{\"kind\":\"TokenReview\",\"apiVersion\":\"authentication.k8s.io/v1\",\"metadata\":{\"creationTimestamp\":null},\"spec\":{\"token\":\"OR4SdSuy-8NRK8NEiYXxxDu01DZcT6jPj5RJ32CDA_c\"},\"status\":{\"authenticated\":\"true\"}}");
+			fail();	
+			} 
+	   	catch (SocialLoginException e) {
+	   		//nls 
+				verifyException(e,"CWWKS5374E" );
+				
+			}
+	   	catch( Throwable t) {
+	   		outputMgr.failWithThrowable(testName.getMethodName(), t);
+	   	}
+	   }
+  
+   @Test
+   public void statusKeyDoesNotExist() {
+	   	try {
+	   	openShiftUserApiUtils.modifyExistingResponseToJSON("{\"kind\":\"TokenReview\",\"apiVersion\":\"authentication.k8s.io/v1\",\"metadata\":{\"creationTimestamp\":null},\"spec\":{\"token\":\"OR4SdSuy-8NRK8NEiYXxxDu01DZcT6jPj5RJ32CDA_c\"}}");
+			fail();	
+			} 
+	   	catch (SocialLoginException e) {
+	   		//nls 
+				verifyException(e,"CWWKS5374E" );
+				
+			}
+	   	catch( Throwable t) {
+	   		outputMgr.failWithThrowable(testName.getMethodName(), t);
+	   	}
+	   }
+   
+   
+   @Test
+   public void jsonResponseStatusIsFailure() {
+   	try {
+           mockery.checking(new Expectations() {
+               {
+                   allowing(config).getUserNameAttribute();
+                   will(returnValue("username"));			
+               }
+           });
+   	openShiftUserApiUtils.modifyExistingResponseToJSON("{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"Unauthorized\",\"reason\":\"Unauthorized\",\"code\":401}");
+		fail();	
+		} 
+   	catch (SocialLoginException e) {
+   		//nls 
+			verifyException(e,"Unauthorized" );
+			
+		}
+   	catch( Throwable t) {
+   		outputMgr.failWithThrowable(testName.getMethodName(), t);
+   	}
+   }
    @Test
     public void responseIsNotJSONObject() {
     	try {
@@ -164,7 +217,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
 		} 
     	catch (SocialLoginException e) {
     		//nls 
-			verifyException(e,"Groups is not jsonarray" );
+			verifyException(e,"OPENSHIFT_USER_API_BAD_RESPONSE" );
 			
 		}
     	catch( Throwable t) {

@@ -115,17 +115,18 @@ public class OpenShiftUserApiUtils {
     String modifyExistingResponseToJSON(String response) throws JoseException, SocialLoginException, ParseException{
     	
     	if(response==null) {
-    		throw new SocialLoginException("The response received from the user response api is null",null,null);
+            throw new SocialLoginException("OPENSHIFT_USER_API_BAD_RESPONSE", null, null);
+    		//throw new SocialLoginException("The response received from the user response api is null",null,null);
     	}
     	if(response.isEmpty()) {
-    		throw new SocialLoginException("The response received from the user response api is empty",null,null);
+    		throw new SocialLoginException("OPENSHIFT_USER_API_BAD_RESPONSE",null,null);
     	}
     	JsonObject jsonResponse;
     	try {
     		jsonResponse = Json.createReader(new StringReader(response)).readObject();
     	}
     	catch(JsonParsingException e) {
-    		throw new SocialLoginException("The response was not a json object. Response was: " + response,e,null);
+    		throw new SocialLoginException("OPENSHIFT_USER_API_BAD_RESPONSE" + response,e,null);
     	}
     	
     	
@@ -147,19 +148,19 @@ public class OpenShiftUserApiUtils {
     				
     	}
     	else {
-    		throw new SocialLoginException("Expected to find a key status in the map but did not find it",null,null);
+    		throw new SocialLoginException("OPENSHIFT_USER_API_RESPONSE_MISSING_KEY",null, new Object[] {"status"});
     	}
     	if(statusInnerMap.containsKey("user")) {
     		userInnerMap = statusInnerMap.getJsonObject("user");
     		modifiedResponse.add("username", userInnerMap.getString(config.getUserNameAttribute()));
     	}
     	else {
-        	throw new SocialLoginException("Expected to find a key [0] in the map but did not find it",null,null); 
+        	throw new SocialLoginException("OPENSHIFT_USER_API_RESPONSE_MISSING_KEY",null,new Object[] {"user"}); 
     	}
     	if(userInnerMap.containsKey("groups")) {
     		JsonValue groupsValue = userInnerMap.get("groups");
     		if(groupsValue.getValueType() != ValueType.ARRAY) {
-    			throw new SocialLoginException("Groups is not jsonarray",null,null); 
+    			throw new SocialLoginException("CWWKS5374E",null,null); 
     		}
     		 modifiedResponse.add("groups", userInnerMap.getJsonArray("groups")); 
         	
