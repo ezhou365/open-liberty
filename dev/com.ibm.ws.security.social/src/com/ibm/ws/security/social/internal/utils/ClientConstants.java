@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation and others.
+ * Copyright (c) 2016, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public class ClientConstants {
     public static final String RESPONSE_TYPE = "response_type";
     public static final String RESPONSE_MODE = "response_mode";
     public static final String FORM_POST = "form_post";
-    
+
     public final static String REQ_METHOD_POST = "POST";
     public final static String REQ_CONTENT_TYPE_NAME = "Content-Type";
     public final static String REQ_CONTENT_TYPE_APP_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -72,5 +72,7 @@ public class ClientConstants {
     public static final String ERROR = "error";
     public static final String ERROR_DESC = "error_description";
     public static final String ERROR_URI = "error_uri";
+
+    public static final String USER_API_SPEC_TOKENREVIEW = "TokenReview";
 
 }

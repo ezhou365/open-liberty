@@ -86,7 +86,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
                     will(returnValue(userApi));
                     one(httpUtils).createConnection(RequestMethod.POST, userApi, sslSocketFactory);
                     one(httpUtils).setHeaders(with(any(HttpURLConnection.class)), with(any(Map.class)));
-                    one(config).getServiceAccountTokenForK8sTokenreview();
+                    one(config).getUserApiToken();
                     will(returnValue(serviceAccountToken));
                 }
             });
@@ -117,7 +117,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
                     one(httpUrlConnection).setDoOutput(true);
                     one(httpUrlConnection).getOutputStream();
                     will(returnValue(outputStream));
-                    one(config).getServiceAccountTokenForK8sTokenreview();
+                    one(config).getUserApiToken();
                     will(returnValue(serviceAccountToken));
                 }
             });
@@ -148,7 +148,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
                     one(httpUrlConnection).setDoOutput(true);
                     one(httpUrlConnection).getOutputStream();
                     will(returnValue(outputStream));
-                    one(config).getServiceAccountTokenForK8sTokenreview();
+                    one(config).getUserApiToken();
                     will(returnValue(serviceAccountToken));
                     one(outputStream).write(with(any(byte[].class)), with(any(int.class)), with(any(int.class)));
                     allowing(outputStream).close();
@@ -177,7 +177,7 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
                     one(httpUrlConnection).setDoOutput(true);
                     one(httpUrlConnection).getOutputStream();
                     will(returnValue(outputStream));
-                    one(config).getServiceAccountTokenForK8sTokenreview();
+                    one(config).getUserApiToken();
                     will(returnValue(serviceAccountToken));
                     one(outputStream).write(with(any(byte[].class)), with(any(int.class)), with(any(int.class)));
                     allowing(outputStream).close();

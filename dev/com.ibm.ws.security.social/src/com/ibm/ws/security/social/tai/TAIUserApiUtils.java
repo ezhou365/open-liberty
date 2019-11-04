@@ -24,6 +24,7 @@ import com.ibm.ws.security.social.UserApiConfig;
 import com.ibm.ws.security.social.error.SocialLoginException;
 import com.ibm.ws.security.social.internal.LinkedinLoginConfigImpl;
 import com.ibm.ws.security.social.internal.Oauth2LoginConfigImpl;
+import com.ibm.ws.security.social.internal.utils.ClientConstants;
 import com.ibm.ws.security.social.internal.utils.OAuthClientUtil;
 import com.ibm.ws.security.social.internal.utils.OpenShiftUserApiUtils;
 
@@ -71,7 +72,8 @@ public class TAIUserApiUtils {
         boolean isOpenShiftConfig = false;
         if (clientConfig instanceof Oauth2LoginConfigImpl) {
             Oauth2LoginConfigImpl config = (Oauth2LoginConfigImpl) clientConfig;
-            return (config.getK8sTokenReviewEndpoint() != null);
+            String userApiSpec = config.getUserApiSpec();
+            return (userApiSpec != null && ClientConstants.USER_API_SPEC_TOKENREVIEW.equals(userApiSpec));
         }
         return isOpenShiftConfig;
     }
