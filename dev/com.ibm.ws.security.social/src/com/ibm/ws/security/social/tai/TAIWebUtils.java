@@ -145,7 +145,7 @@ public class TAIWebUtils {
 
     public String getBearerAccessToken(HttpServletRequest req, Oauth2LoginConfigImpl clientConfig) {
 
-        String headerName = clientConfig.getTokenHeaderName();
+        String headerName = clientConfig.getAccessTokenName();
         if (headerName != null) {
             String hdrValue = req.getHeader(headerName);
             if (tc.isDebugEnabled()) {

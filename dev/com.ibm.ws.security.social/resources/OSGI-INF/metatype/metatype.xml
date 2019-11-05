@@ -169,9 +169,9 @@
         <AD id="responseType" name="%responseType" description="%responseType.desc" required="false" type="String" default="code">
                 <Option label="%responseType.code" value="code" />
             <!-- future
-            	<Option label="%responseType.token" value="token" />
-			-->
-		</AD>
+                <Option label="%responseType.token" value="token" />
+            -->
+        </AD>
     </OCD>
 
     <Designate pid="com.ibm.ws.security.social.facebook">
@@ -219,9 +219,9 @@
         <AD id="responseType" name="%responseType" description="%responseType.desc" required="false" type="String" default="code">
                 <Option label="%responseType.code" value="code" />
             <!-- future
-            	<Option label="%responseType.token" value="token" />
-			-->
-		</AD>
+                <Option label="%responseType.token" value="token" />
+            -->
+        </AD>
     </OCD>
 
     <Designate pid="com.ibm.ws.security.social.github">
@@ -271,9 +271,9 @@
         <AD id="responseType" name="%responseType" description="%responseType.desc" required="false" type="String" default="code">
                 <Option label="%responseType.code" value="code" />
             <!-- future
-            	<Option label="%responseType.token" value="token" />
-			-->
-		</AD>
+                <Option label="%responseType.token" value="token" />
+            -->
+        </AD>
     </OCD>
 
     <Designate pid="com.ibm.ws.security.social.linkedin">
@@ -328,20 +328,20 @@
         <AD id="userApiNeedsSpecialHeader" name="internal" description="internal use only" required="false"
             type="Boolean" default="false" />
         <AD id="useSystemPropertiesForHttpClientConnections" name="%useSystemPropertiesForHttpClientConnections" description="%useSystemPropertiesForHttpClientConnections.desc" required="false" type="Boolean" default="false"/>
-        <!-- Start of OpenShift-specific config -->
-        <AD id="k8sTokenReviewEndpoint" name="%k8sTokenReviewEndpoint" description="%k8sTokenReviewEndpoint.desc"
-            required="false" type="String" ibm:type="token" />
-        <AD id="serviceAccountTokenForK8sTokenreview" name="%serviceAccountTokenForK8sTokenreview" description="%serviceAccountTokenForK8sTokenreview.desc"
-            required="false" type="String" ibm:type="password" />
-        <AD id="useAccessTokenFromRequest" name="%useAccessTokenFromRequest" description="%useAccessTokenFromRequest.desc"
-            required="false" type="String" default="ifPresent">
-            <Option label="%useAccessTokenFromRequest.no" value="no" />
-            <Option label="%useAccessTokenFromRequest.required" value="required" />
-            <Option label="%useAccessTokenFromRequest.ifPresent" value="ifPresent" />
+        <AD id="userApiSpec" name="internal" description="internal use only"
+            required="false" type="String" default="TokenReview">
+            <Option label="TokenReview" value="TokenReview" />
         </AD>
-        <AD id="tokenHeaderName" name="%tokenHeaderName" description="%tokenHeaderName.desc"
+        <!-- If userApiSpec="TokenReview", the userApiToken value is required because the runtime will make a call to the TokenReview API.
+             The call to the TokenReview API must include a token for a service account that's allowed to make that call. -->
+        <AD id="userApiToken" name="internal" description="internal use only"
+            required="false" type="String" ibm:type="password" />
+        <AD id="accessTokenAuthentication" name="internal" description="internal use only"
+            required="false" type="Boolean" default="false" />
+        <AD id="accessTokenAuthenticationSupported" name="internal" description="internal use only"
+            required="false" type="Boolean" default="false" />
+        <AD id="accessTokenName" name="internal" description="internal use only"
             required="false" type="String" />
-        <!-- End of OpenShift-specific config -->
     </OCD>
 
     <Designate factoryPid="com.ibm.ws.security.social.oauth2login">
@@ -420,7 +420,7 @@
             <Option label="%responseType.idTokenToken" value="id_token token" />
             <!-- future
             <Option label="%responseType.idToken" value="id_token" />
-			-->
+            -->
         </AD>
         <AD id="responseMode" name="internal" description="internal use only" required="false" type="String">
             <Option label="%responseMode.formPost" value="form_post" />
@@ -444,7 +444,7 @@
     
      <OCD id="com.ibm.ws.security.social.client.param.metatype" name="%oidcClientCustomRequestParam" description="%oidcClientCustomRequestParam.desc" 
          ibmui:localization="OSGI-INF/l10n/metatype" >
-     	 <AD id="name" name="%oidcClientCustomRequestParamName" description="%oidcClientCustomRequestParamName.desc" required="false" type="String" />
+         <AD id="name" name="%oidcClientCustomRequestParamName" description="%oidcClientCustomRequestParamName.desc" required="false" type="String" />
          <AD id="value" name="%oidcClientCustomRequestParamValue" description="%oidcClientCustomRequestParamValue.desc" required="false" type="String" />
     </OCD>
 
@@ -474,7 +474,7 @@
     <!--  see also WABConfiguration javadoc -->
     <OCD id="com.ibm.ws.security.social.login.jwt.metatype" name="%jwtBuilder" description="%jwtBuilder.desc" 
          ibmui:localization="OSGI-INF/l10n/metatype" >
-     	 <AD id="builder" name="%jwtRef"    description="%jwtRef.desc"     required="false" type="String" ibm:type="token" />
+         <AD id="builder" name="%jwtRef"    description="%jwtRef.desc"     required="false" type="String" ibm:type="token" />
          <AD id="claims"  name="%jwtClaims" description="%jwtClaims.desc"  required="false" type="String" cardinality="400" />
     </OCD>
     <Designate factoryPid="com.ibm.ws.security.social.login.jwt">

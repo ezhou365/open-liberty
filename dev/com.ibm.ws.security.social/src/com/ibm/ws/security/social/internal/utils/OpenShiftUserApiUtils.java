@@ -86,7 +86,7 @@ public class OpenShiftUserApiUtils {
     @Sensitive
     Map<String, String> getUserApiRequestHeaders() {
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put("Authorization", "Bearer " + config.getServiceAccountTokenForK8sTokenreview());
+        headers.put("Authorization", "Bearer " + config.getUserApiToken());
         headers.put("Accept", "application/json");
         headers.put("Content-Type", "application/json");
         return headers;

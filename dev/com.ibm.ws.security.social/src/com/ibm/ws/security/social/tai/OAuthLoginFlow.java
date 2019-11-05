@@ -59,11 +59,10 @@ public class OAuthLoginFlow {
 
     private boolean useAccessTokenFromRequest(Oauth2LoginConfigImpl clientConfig) {
 
-        if ("no".equals(clientConfig.getUseAccessTokenFromRequest())) {
-            return false;
-        } else {
-            // ifPresent or required
+        if (clientConfig.isAccessTokenAuthentication() || clientConfig.isAccessTokenAuthenticationSupported()) {
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -126,11 +125,7 @@ public class OAuthLoginFlow {
     }
 
     private boolean requestShouldHaveToken(Oauth2LoginConfigImpl clientConfig) {
-        if ("required".equals(clientConfig.getUseAccessTokenFromRequest())) {
-            return true;
-        } else {
-            return false;
-        }
+        return clientConfig.isAccessTokenAuthentication();
     }
 
     @FFDCIgnore(SocialLoginException.class)

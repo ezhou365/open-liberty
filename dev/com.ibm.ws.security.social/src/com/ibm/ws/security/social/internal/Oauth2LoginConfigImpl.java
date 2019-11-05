@@ -172,15 +172,17 @@ public class Oauth2LoginConfigImpl implements SocialLoginConfig {
     public static final String KEY_USE_SYSPROPS_FOR_HTTPCLIENT_CONNECTONS = "useSystemPropertiesForHttpClientConnections";
     protected boolean useSystemPropertiesForHttpClientConnections = false;
 
-    // OpenShift-specific configuration
-    public static final String KEY_k8sTokenReviewEndpoint = "k8sTokenReviewEndpoint";
-    protected String k8sTokenReviewEndpoint = null;
-    public static final String KEY_serviceAccountTokenForK8sTokenreview = "serviceAccountTokenForK8sTokenreview";
-    protected String serviceAccountTokenForK8sTokenreview = null;
-    public static final String KEY_useAccessTokenFromRequest = "useAccessTokenFromRequest";
-    protected String useAccessTokenFromRequest = null;
-    public static final String KEY_tokenHeaderName = "tokenHeaderName";
-    protected String tokenHeaderName = null;
+    public static final String KEY_userApiSpec = "userApiSpec";
+    protected String userApiSpec = null;
+
+    public static final String KEY_userApiToken = "userApiToken";
+    protected String userApiToken = null;
+    public static final String KEY_accessTokenAuthentication = "accessTokenAuthentication";
+    protected boolean accessTokenAuthentication = false;
+    public static final String KEY_accessTokenAuthenticationSupported = "accessTokenAuthenticationSupported";
+    protected boolean accessTokenAuthenticationSupported = false;
+    public static final String KEY_accessTokenName = "accessTokenName";
+    protected String accessTokenName = null;
 
     protected CommonConfigUtils configUtils = new CommonConfigUtils();
 
@@ -247,16 +249,16 @@ public class Oauth2LoginConfigImpl implements SocialLoginConfig {
     }
 
     boolean isOpenShiftConfiguration(Map<String, Object> props) {
-        String tokenReviewEndpoint = configUtils.getConfigAttribute(props, KEY_k8sTokenReviewEndpoint);
-        if (tokenReviewEndpoint != null && !tokenReviewEndpoint.isEmpty()) {
+        String userApiSpec = configUtils.getConfigAttribute(props, KEY_userApiSpec);
+        if (userApiSpec != null && ClientConstants.USER_API_SPEC_TOKENREVIEW.equals(userApiSpec)) {
             return true;
         }
         return false;
     }
 
     protected void setRequiredConfigAttributesForOpenShift(Map<String, Object> props) {
-        this.serviceAccountTokenForK8sTokenreview = getRequiredSerializableProtectedStringConfigAttribute(props, KEY_serviceAccountTokenForK8sTokenreview);
-        this.k8sTokenReviewEndpoint = configUtils.getRequiredConfigAttribute(props, KEY_k8sTokenReviewEndpoint);
+        this.userApiToken = getRequiredSerializableProtectedStringConfigAttribute(props, KEY_userApiToken);
+        this.userApi = getRequiredConfigAttribute(props, KEY_userApi);
     }
 
     protected void setOptionalConfigAttributes(Map<String, Object> props) throws SocialLoginException {
@@ -290,9 +292,15 @@ public class Oauth2LoginConfigImpl implements SocialLoginConfig {
         this.clientSecret = configUtils.processProtectedString(props, KEY_clientSecret);
         this.authorizationEndpoint = configUtils.getConfigAttribute(props, KEY_authorizationEndpoint);
         this.scope = configUtils.getConfigAttribute(props, KEY_scope);
-        this.userApi = k8sTokenReviewEndpoint;
-        this.useAccessTokenFromRequest = configUtils.getConfigAttribute(props, KEY_useAccessTokenFromRequest);
-        this.tokenHeaderName = configUtils.getConfigAttribute(props, KEY_tokenHeaderName);
+        this.userApiSpec = configUtils.getConfigAttribute(props, KEY_userApiSpec);
+        this.accessTokenAuthentication = configUtils.getBooleanConfigAttribute(props, KEY_accessTokenAuthentication, this.accessTokenAuthentication);
+        this.accessTokenAuthenticationSupported = configUtils.getBooleanConfigAttribute(props, KEY_accessTokenAuthenticationSupported, this.accessTokenAuthenticationSupported);
+        this.accessTokenName = configUtils.getConfigAttribute(props, KEY_accessTokenName);
+        if (!accessTokenAuthentication && !accessTokenAuthenticationSupported) {
+            // If we aren't using the OpenShift proxy configuration, we MUST have the authorizationEndpoint and tokenEndpoint
+            this.authorizationEndpoint = configUtils.getRequiredConfigAttribute(props, KEY_authorizationEndpoint);
+            this.tokenEndpoint = configUtils.getRequiredConfigAttribute(props, KEY_tokenEndpoint);
+        }
     }
 
     protected void initializeMembersAfterConfigAttributesPopulated(Map<String, Object> props) throws SocialLoginException {
@@ -788,21 +796,25 @@ public class Oauth2LoginConfigImpl implements SocialLoginConfig {
         return useSystemPropertiesForHttpClientConnections;
     }
 
-    public String getK8sTokenReviewEndpoint() {
-        return k8sTokenReviewEndpoint;
+    public String getUserApiSpec() {
+        return userApiSpec;
     }
 
     @Sensitive
-    public String getServiceAccountTokenForK8sTokenreview() {
-        return serviceAccountTokenForK8sTokenreview;
+    public String getUserApiToken() {
+        return userApiToken;
     }
 
-    public String getUseAccessTokenFromRequest() {
-        return useAccessTokenFromRequest;
+    public boolean isAccessTokenAuthentication() {
+        return accessTokenAuthentication;
     }
 
-    public String getTokenHeaderName() {
-        return tokenHeaderName;
+    public boolean isAccessTokenAuthenticationSupported() {
+        return accessTokenAuthenticationSupported;
+    }
+
+    public String getAccessTokenName() {
+        return accessTokenName;
     }
 
 }
