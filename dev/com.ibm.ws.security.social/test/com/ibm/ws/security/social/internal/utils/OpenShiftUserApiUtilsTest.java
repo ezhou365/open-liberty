@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package com.ibm.ws.security.social.internal.utils;
+/*package com.ibm.ws.security.social.internal.utils;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -396,3 +396,4 @@ public class OpenShiftUserApiUtilsTest extends CommonTestClass {
         }
     }
 }
+*/

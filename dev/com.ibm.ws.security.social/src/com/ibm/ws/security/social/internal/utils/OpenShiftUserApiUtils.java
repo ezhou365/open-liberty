@@ -29,7 +29,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.HttpServletResponse;
 
 //import org.jose4j.json.internal.json_simple.parser.JSONParser;
-import org.jose4j.json.internal.json_simple.parser.ParseException;
 
 import org.jose4j.lang.JoseException;
 
@@ -103,7 +102,7 @@ public class OpenShiftUserApiUtils {
         return bodyBuilder.build().toString();
     }
 
-    String readUserApiResponse(HttpURLConnection connection) throws IOException, SocialLoginException, JoseException, ParseException {
+    String readUserApiResponse(HttpURLConnection connection) throws IOException, SocialLoginException, JoseException{
         int responseCode = connection.getResponseCode();
         String response = httpUtils.readConnectionResponse(connection);
         if (responseCode != HttpServletResponse.SC_CREATED) {
@@ -112,7 +111,7 @@ public class OpenShiftUserApiUtils {
         return modifyExistingResponseToJSON(response);
     }
 
-    String modifyExistingResponseToJSON(String response) throws JoseException, SocialLoginException, ParseException{
+    String modifyExistingResponseToJSON(String response) throws JoseException, SocialLoginException{
     	
     	if(response==null) {
             throw new SocialLoginException("OPENSHIFT_USER_API_BAD_RESPONSE", null, null);
